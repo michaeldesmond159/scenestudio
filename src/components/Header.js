@@ -1,10 +1,12 @@
 import { SettingsModal } from './SettingsModal.js';
+import { CharacterLock } from './CharacterLock.js';
+import { getActiveCharacter } from '../lib/characterLibrary.js';
+import '../lib/characterAwareGeneration.js';
 import { t, getLang, setLang } from '../lib/i18n.js';
 
 export function Header(navigate) {
     const header = document.createElement('header');
     header.className = 'w-full flex flex-col z-50 sticky top-0';
-
 
     // 2. Main Navigation Bar
     const navBar = document.createElement('div');
@@ -62,7 +64,28 @@ export function Header(navigate) {
     leftPart.appendChild(menu);
 
     const rightPart = document.createElement('div');
-    rightPart.className = 'flex items-center gap-4';
+    rightPart.className = 'flex items-center gap-2 md:gap-4';
+
+    const characterBtn = document.createElement('button');
+    const refreshCharacterButton = () => {
+        const active = getActiveCharacter();
+        characterBtn.className = `flex items-center gap-2 px-3 py-1.5 rounded-md border text-[13px] font-bold transition-colors ${active ? 'border-primary/40 bg-primary/10 text-primary hover:bg-primary/15' : 'border-white/10 bg-white/5 text-white/80 hover:text-white hover:bg-white/10 hover:border-white/20'}`;
+        characterBtn.title = active ? `Character Lock active: ${active.name}` : 'Open Character Lock';
+        characterBtn.innerHTML = `
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>
+            </svg>
+            <span class="hidden md:inline">${active ? active.name : 'Character'}</span>
+            ${active ? '<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>' : ''}
+        `;
+    };
+    refreshCharacterButton();
+    characterBtn.onclick = () => {
+        document.body.appendChild(CharacterLock({
+            onSelect: () => refreshCharacterButton(),
+            onClose: () => refreshCharacterButton(),
+        }));
+    };
 
     const settingsBtn = document.createElement('button');
     settingsBtn.className = 'flex items-center gap-2 px-3 py-1.5 rounded-md border border-white/10 bg-white/5 text-[13px] font-bold text-white/80 hover:text-white hover:bg-white/10 hover:border-white/20 transition-colors';
@@ -72,7 +95,7 @@ export function Header(navigate) {
             <circle cx="12" cy="12" r="3"/>
             <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
         </svg>
-        <span>${t('nav.settings')}</span>
+        <span class="hidden md:inline">${t('nav.settings')}</span>
     `;
     settingsBtn.onclick = () => {
         document.body.appendChild(SettingsModal());
@@ -81,11 +104,12 @@ export function Header(navigate) {
     // Language toggle button
     const langBtn = document.createElement('button');
     const currentLang = getLang();
-    langBtn.className = 'flex items-center px-3 py-1.5 rounded-md border border-white/10 bg-white/5 text-[13px] font-bold text-white/80 hover:text-white hover:bg-white/10 hover:border-white/20 transition-colors';
+    langBtn.className = 'hidden sm:flex items-center px-3 py-1.5 rounded-md border border-white/10 bg-white/5 text-[13px] font-bold text-white/80 hover:text-white hover:bg-white/10 hover:border-white/20 transition-colors';
     langBtn.title = currentLang === 'zh-CN' ? t('web.switchToEn') : t('web.switchToZh');
     langBtn.textContent = currentLang === 'zh-CN' ? 'EN' : '中文';
     langBtn.onclick = () => setLang(currentLang === 'zh-CN' ? 'en' : 'zh-CN');
 
+    rightPart.appendChild(characterBtn);
     rightPart.appendChild(langBtn);
     rightPart.appendChild(settingsBtn);
 
